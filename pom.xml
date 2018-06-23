@@ -19,7 +19,7 @@
 	<distributionManagement>
 		<repository>
 			<id>gridonline-releases</id>
-			<url>http://nexus.gridonline.net/content/repositories/gridsofts/</url>
+			<url>http://nexus.gridonline.net/content/repositories/releases/</url>
 		</repository>
 	</distributionManagement>
 
