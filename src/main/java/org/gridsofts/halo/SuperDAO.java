@@ -32,10 +32,10 @@ import org.gridsofts.halo.util.BeanUtil;
 public class SuperDAO extends AbstractDAO {
 	private static final long serialVersionUID = 1L;
 
-	protected SuperDAO() {
+	public SuperDAO() {
 	}
 
-	protected SuperDAO(IConnectionFactory factory) {
+	public SuperDAO(IConnectionFactory factory) {
 		super(factory);
 	}
 
