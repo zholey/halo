@@ -504,7 +504,7 @@ public class BeanFactory {
 
 				if (!otmAnnotation.lazy()) {
 					try {
-						loadOneToMany(dao, bean.getClass(), tableAnnotation.PrimaryKey(), otmField,
+						loadOneToMany(dao, bean.getClass(), tableAnnotation.primaryKey(), otmField,
 								bean);
 					} catch (Throwable e) {
 					}

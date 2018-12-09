@@ -52,7 +52,7 @@ public class MysqlDialect implements Serializable, IDialect {
 			// 主键列
 			// 如果需要自动生成主键，则跳过
 			if (BeanUtil.isPrimaryField(metaInfo.tableMetaInfo, colName)
-					&& metaInfo.tableMetaInfo.IsGenerateKeys()) {
+					&& metaInfo.tableMetaInfo.autoGenerateKeys()) {
 				
 				keyColumnNames.add(BeanUtil.getColumnName(fields[i]).toUpperCase());
 

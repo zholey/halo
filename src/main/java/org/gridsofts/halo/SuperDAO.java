@@ -46,7 +46,7 @@ public class SuperDAO extends AbstractDAO {
 	 * @return
 	 */
 	protected String getTableName(Table metaTable) {
-		return metaTable.Name();
+		return metaTable.value();
 	}
 
 	@Override
@@ -413,7 +413,7 @@ public class SuperDAO extends AbstractDAO {
 				statement.executeUpdate();
 
 				// 准备返回自动生成的主键
-				if (metaInfo.tableMetaInfo.IsGenerateKeys() && keyColumnNames.size() > 0) {
+				if (metaInfo.tableMetaInfo.autoGenerateKeys() && keyColumnNames.size() > 0) {
 
 					priKeyValue.clear();
 

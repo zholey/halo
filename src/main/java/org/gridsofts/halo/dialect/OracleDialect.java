@@ -70,7 +70,7 @@ public class OracleDialect implements Serializable, IDialect {
 			// 主键列
 			// 如果需要自动生成主键，则跳过
 			if (BeanUtil.isPrimaryField(metaInfo.tableMetaInfo, colName)
-					&& metaInfo.tableMetaInfo.IsGenerateKeys()) {
+					&& metaInfo.tableMetaInfo.autoGenerateKeys()) {
 
 				keyColumnNames.add(BeanUtil.getColumnName(fields[i]).toUpperCase());
 			}
@@ -105,7 +105,7 @@ public class OracleDialect implements Serializable, IDialect {
 				// 主键列
 				// 如果需要自动生成主键，则加入序列
 				if (BeanUtil.isPrimaryField(metaInfo.tableMetaInfo, colName)
-						&& metaInfo.tableMetaInfo.IsGenerateKeys() && property != null
+						&& metaInfo.tableMetaInfo.autoGenerateKeys() && property != null
 						&& !StringUtil.isNull(getPkPolicy(beans[i]))) {
 
 					sqlBuffer.append(getPkPolicy(beans[i]));

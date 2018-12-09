@@ -58,7 +58,7 @@ public class MetaInfo implements Serializable {
 		metaInfo.tableMetaInfo = metaTable;
 
 		// 取主键
-		String[] primaryKeys = metaTable.PrimaryKey();
+		String[] primaryKeys = metaTable.primaryKey();
 
 		// 如果类未标注主键，则抛出异常
 		if (primaryKeys == null || primaryKeys.length == 0) {

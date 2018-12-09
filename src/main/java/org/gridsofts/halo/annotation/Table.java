@@ -22,9 +22,9 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 public @interface Table {
 
-	String Name();
+	String value();
 
-	String[] PrimaryKey();
+	String[] primaryKey();
 
-	boolean IsGenerateKeys() default true;
+	boolean autoGenerateKeys() default true;
 }

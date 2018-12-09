@@ -269,7 +269,7 @@ public class BeanUtil {
 			return false;
 		}
 
-		String[] primaryKeys = metaTable.PrimaryKey();
+		String[] primaryKeys = metaTable.primaryKey();
 
 		if (primaryKeys == null || primaryKeys.length == 0) {
 			return false;
@@ -293,7 +293,7 @@ public class BeanUtil {
 	 */
 	public static String getColumnName(Field field) {
 
-		return field.getAnnotation(Column.class) == null ? field.getName() : field.getAnnotation(Column.class).name();
+		return field.getAnnotation(Column.class) == null ? field.getName() : field.getAnnotation(Column.class).value();
 	}
 
 	/**

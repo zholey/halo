@@ -79,7 +79,7 @@ public class LazyInterceptor implements MethodInterceptor, Serializable {
 				Field otmField = iterator.next();
 				OneToMany otmAnnotation = otmField.getAnnotation(OneToMany.class);
 
-				String[] primaryKeys = tableAnnotation.PrimaryKey();
+				String[] primaryKeys = tableAnnotation.primaryKey();
 
 				if (otmAnnotation.lazy()
 						&& BeanUtil.getGetterMethodName(otmField.getName())
