@@ -142,6 +142,33 @@ public class BeanUtil {
 	}
 
 	/**
+	 * 在给定的类中查找指定名称的属性，向上查找所有的父类
+	 * 
+	 * @param fieldName
+	 * @param beanClass
+	 * @return
+	 */
+	public static Field getDeclaredField(String fieldName, Class<?> beanClass) {
+
+		if (beanClass != null) {
+
+			Field field = null;
+			try {
+				field = beanClass.getDeclaredField(fieldName);
+			} catch (Throwable e) {
+			}
+			
+			if (field != null) {
+				return field;
+			} else if (beanClass.getSuperclass() != null) {
+				return getDeclaredField(fieldName, beanClass.getSuperclass());
+			}
+		}
+
+		return null;
+	}
+
+	/**
 	 * 在给定的类中查找所有属性，可以根据需要向上查找所有的父类
 	 * 
 	 * @param beanClass
@@ -283,6 +310,20 @@ public class BeanUtil {
 		}
 
 		return false;
+	}
+
+	/**
+	 * 获取字段对应的数据列名，除非有特别标注(Column)，否则直接使用字段名
+	 * 
+	 * @param fieldName
+	 *            字段名称
+	 * @param beanClass
+	 * @return
+	 */
+	public static String getColumnName(String fieldName, Class<?> beanClass) {
+		Field field = getDeclaredField(fieldName, beanClass);
+
+		return field == null ? null : getColumnName(field);
 	}
 
 	/**
