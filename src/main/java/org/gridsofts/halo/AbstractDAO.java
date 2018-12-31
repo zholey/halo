@@ -57,7 +57,7 @@ public abstract class AbstractDAO implements Serializable {
 		// 加载配置信息（如果有）
 		Properties property = new Properties();
 		try {
-			property.load(AbstractDAO.class.getResourceAsStream("/etc/GDlib4j.dao.properties"));
+			property.load(AbstractDAO.class.getResourceAsStream("/halo-config.properties"));
 
 			if (property.containsKey("dialect")) {
 				Class<?> dialectCls = Class.forName(property.getProperty("dialect"));
