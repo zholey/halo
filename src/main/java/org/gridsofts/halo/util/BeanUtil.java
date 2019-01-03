@@ -333,8 +333,7 @@ public class BeanUtil {
 	 * @return
 	 */
 	public static String getColumnName(Field field) {
-
-		return field.getAnnotation(Column.class) == null ? field.getName() : field.getAnnotation(Column.class).value();
+		return field.isAnnotationPresent(Column.class) ? field.getAnnotation(Column.class).value() : field.getName();
 	}
 
 	/**

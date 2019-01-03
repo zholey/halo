@@ -7,11 +7,13 @@ package org.gridsofts.halo;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.gridsofts.halo.annotation.Table;
 import org.gridsofts.halo.exception.AnnotationException;
+import org.gridsofts.halo.util.BeanUtil;
 
 public class MetaInfo implements Serializable {
 	private static final long serialVersionUID = 1L;
@@ -19,6 +21,7 @@ public class MetaInfo implements Serializable {
 	public Class<?> clazz;
 	public Table tableMetaInfo;
 	public List<Field> primaryKeys;
+	public List<Field> fields;
 
 	/**
 	 * 获取指定类型的标注信息组
@@ -56,22 +59,35 @@ public class MetaInfo implements Serializable {
 		// 记录相关内容
 		metaInfo.clazz = clazz;
 		metaInfo.tableMetaInfo = metaTable;
+		
+		metaInfo.fields = Arrays.asList(BeanUtil.getDeclaredFields(clazz, true));
 
-		// 取主键
-		String[] primaryKeys = metaTable.primaryKey();
+		// 如果字段为空，则抛出异常
+		if (metaInfo.fields == null || metaInfo.fields.isEmpty()) {
+			throw new AnnotationException("未定义列信息");
+		}
+		
+		// 过滤出所有非静态/常量/瞬态字段
+		metaInfo.fields = metaInfo.fields.stream().filter(field -> {
+			return !BeanUtil.isConstField(field) && !BeanUtil.isTransient(field);
+		}).collect(Collectors.toList());
+
+		// 如果字段为空，则抛出异常
+		if (metaInfo.fields == null || metaInfo.fields.isEmpty()) {
+			throw new AnnotationException("未标注列信息");
+		}
 
 		// 如果类未标注主键，则抛出异常
-		if (primaryKeys == null || primaryKeys.length == 0) {
+		if (metaTable.primaryKey() == null || metaTable.primaryKey().length == 0) {
 			throw new AnnotationException("未标注主键信息");
 		}
 
-		List<Field> primaryKey = new ArrayList<>();
-		for (String keyName : primaryKeys) {
-			primaryKey.add(clazz.getDeclaredField(keyName));
-		}
-
-		// 记录相关内容
-		metaInfo.primaryKeys = primaryKey;
+		// 取主键
+		List<String> primaryKeys = Arrays.asList(metaTable.primaryKey());
+		
+		metaInfo.primaryKeys = metaInfo.fields.stream().filter(field -> {
+			return primaryKeys.contains(field.getName());
+		}).collect(Collectors.toList());
 
 		return metaInfo;
 	}

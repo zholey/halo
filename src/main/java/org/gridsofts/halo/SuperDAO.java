@@ -14,6 +14,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.gridsofts.halo.annotation.Table;
 import org.gridsofts.halo.bean.RSMemoryCache;
@@ -75,20 +76,20 @@ public class SuperDAO extends AbstractDAO {
 			String tableName = getTableName(metaInfo.tableMetaInfo);
 
 			// 拼接SQL
-			StringBuffer sql = null;
+			StringBuffer sql = new StringBuffer("SELECT");
 
-			for (Field primaryKey : metaInfo.primaryKeys) {
-				String priColName = BeanUtil.getColumnName(primaryKey);
+			// 拼接所有列名
+			sql.append(metaInfo.fields.stream().map(field -> {
+				return BeanUtil.getColumnName(field);
+			}).collect(Collectors.joining(",", " ", " ")));
 
-				if (sql == null) {
-					sql = new StringBuffer();
+			// 表名
+			sql.append("FROM " + tableName);
 
-					sql.append("select * from " + tableName);
-					sql.append(" where " + priColName + " = ? ");
-				} else {
-					sql.append(" and " + priColName + " = ? ");
-				}
-			}
+			// 主键
+			metaInfo.primaryKeys.stream().map(k -> {
+				return BeanUtil.getColumnName(k) + " = ?";
+			}).collect(Collectors.joining(" AND ", "WHERE", ""));
 
 			try {
 
@@ -124,8 +125,7 @@ public class SuperDAO extends AbstractDAO {
 	}
 
 	@Override
-	public synchronized <T> long getTotalQuantity(Class<T> t, String condition, Object... param)
-			throws DAOException {
+	public synchronized <T> long getTotalQuantity(Class<T> t, String condition, Object... param) throws DAOException {
 
 		PreparedStatement stat = null;
 		RSMemoryCache rs = null;
@@ -147,7 +147,7 @@ public class SuperDAO extends AbstractDAO {
 			// 拼接SQL
 			StringBuffer sql = new StringBuffer();
 
-			sql.append("select count(0) from " + tableName + " ");
+			sql.append("SELECT COUNT(0) FROM " + tableName + " ");
 
 			if (condition != null) {
 				sql.append(condition);
@@ -188,14 +188,13 @@ public class SuperDAO extends AbstractDAO {
 	}
 
 	@Override
-	public synchronized <T> List<T> list(Class<T> t, String condition, Object... param)
-			throws DAOException {
+	public synchronized <T> List<T> list(Class<T> t, String condition, Object... param) throws DAOException {
 		return list(t, -1, -1, condition, param);
 	}
 
 	@Override
-	public synchronized <T> List<T> list(Class<T> t, int start, int limit, String condition,
-			Object... param) throws DAOException {
+	public synchronized <T> List<T> list(Class<T> t, int start, int limit, String condition, Object... param)
+			throws DAOException {
 
 		List<T> list = new ArrayList<>();
 
@@ -219,7 +218,7 @@ public class SuperDAO extends AbstractDAO {
 			// 拼接SQL
 			StringBuffer sql = new StringBuffer();
 
-			sql.append("select " + tableName + ".* from " + tableName + " ");
+			sql.append("SELECT " + tableName + ".* FROM " + tableName + " ");
 
 			if (condition != null) {
 				sql.append(condition);
@@ -296,13 +295,11 @@ public class SuperDAO extends AbstractDAO {
 					values.clear();
 					keyColumnNames.clear();
 
-					String batchSQL = dialect.getInsertSQL(values, keyColumnNames, metaInfo,
-							tableName, beans);
+					String batchSQL = dialect.getInsertSQL(values, keyColumnNames, metaInfo, tableName, beans);
 
 					try {
 						if (keyColumnNames.size() > 0) {
-							statement = conn.prepareStatement(batchSQL,
-									keyColumnNames.toArray(new String[0]));
+							statement = conn.prepareStatement(batchSQL, keyColumnNames.toArray(new String[0]));
 						} else {
 							statement = conn.prepareStatement(batchSQL);
 						}
@@ -322,13 +319,11 @@ public class SuperDAO extends AbstractDAO {
 						values.clear();
 						keyColumnNames.clear();
 
-						String batchSQL = dialect.getInsertSQL(values, keyColumnNames, metaInfo,
-								tableName, bean);
+						String batchSQL = dialect.getInsertSQL(values, keyColumnNames, metaInfo, tableName, bean);
 
 						try {
 							if (keyColumnNames.size() > 0) {
-								statement = conn.prepareStatement(batchSQL,
-										keyColumnNames.toArray(new String[0]));
+								statement = conn.prepareStatement(batchSQL, keyColumnNames.toArray(new String[0]));
 							} else {
 								statement = conn.prepareStatement(batchSQL);
 							}
@@ -392,13 +387,11 @@ public class SuperDAO extends AbstractDAO {
 				List<Object> values = new ArrayList<>();
 				List<String> keyColumnNames = new ArrayList<>();
 
-				String insertSQL = dialect.getInsertSQL(values, keyColumnNames, metaInfo,
-						tableName, bean);
+				String insertSQL = dialect.getInsertSQL(values, keyColumnNames, metaInfo, tableName, bean);
 
 				try {
 					if (keyColumnNames.size() > 0) {
-						statement = conn.prepareStatement(insertSQL,
-								keyColumnNames.toArray(new String[0]));
+						statement = conn.prepareStatement(insertSQL, keyColumnNames.toArray(new String[0]));
 					} else {
 						statement = conn.prepareStatement(insertSQL);
 					}
@@ -461,57 +454,40 @@ public class SuperDAO extends AbstractDAO {
 				throw new DAOException("查找类描述元信息时出现异常，原始信息：" + e.getMessage());
 			}
 
-			Field[] fields = metaInfo.clazz.getDeclaredFields();
-			if (fields == null || fields.length == 0) {
+			String tableName = getTableName(metaInfo.tableMetaInfo);
+
+			if (metaInfo.fields == null || metaInfo.fields.isEmpty()) {
 				throw new NullPointerException();
 			}
 
 			// 拼接SQL
-			StringBuffer sql = new StringBuffer();
-
-			StringBuffer uptParamSql = new StringBuffer("update "
-					+ getTableName(metaInfo.tableMetaInfo) + " set ");
+			StringBuffer sql = new StringBuffer("UPDATE ");
 			List<Object> colValues = new ArrayList<>();
 
-			// 拼接SQL
-			for (int i = 0, count = fields.length; i < count; i++) {
-				String colName = fields[i].getName();
+			// 表名
+			sql.append(tableName + " SET");
 
-				// 如果此字段不是数据表中的列，则跳过
-				if (BeanUtil.isTransient(fields[i])) {
-					continue;
-				}
-
+			// 拼接所有列名
+			final List<Field> primaryKeys = metaInfo.primaryKeys;
+			sql.append(metaInfo.fields.stream().filter(field -> {
 				// 跳过主键列的赋值，不允许修改主键值
-				if (BeanUtil.isPrimaryField(metaInfo.tableMetaInfo, colName)) {
-					continue;
-				}
-
-				//
-				uptParamSql.append(BeanUtil.getColumnName(fields[i]) + " = ?, ");
+				return !primaryKeys.contains(field);
+			}).map(field -> {
 
 				// 保存列值
-				colValues.add(BeanUtil.getFieldValue(bean, colName));
-			}
+				colValues.add(BeanUtil.getFieldValue(bean, field.getName()));
 
-			sql.append(uptParamSql.toString().replaceAll(",\\s*$", " "));
+				return BeanUtil.getColumnName(field) + " = ?";
+			}).collect(Collectors.joining(",", " ", " ")));
 
-			// 拼接 主键关联条件
-			StringBuffer uptWhereSql = null;
-			for (Field key : metaInfo.primaryKeys) {
-				String colName = BeanUtil.getColumnName(key);
-
-				if (uptWhereSql == null) {
-					uptWhereSql = new StringBuffer(" where " + colName + " = ?");
-				} else {
-					uptWhereSql.append(" and " + colName + " = ?");
-				}
+			// 主键
+			sql.append(metaInfo.primaryKeys.stream().map(k -> {
 
 				// 保存主键值
-				colValues.add(BeanUtil.getFieldValue(bean, key.getName()));
-			}
+				colValues.add(BeanUtil.getFieldValue(bean, k.getName()));
 
-			sql.append(uptWhereSql.toString());
+				return BeanUtil.getColumnName(k) + " = ?";
+			}).collect(Collectors.joining(" AND ", "WHERE", "")));
 
 			try {
 
@@ -550,21 +526,13 @@ public class SuperDAO extends AbstractDAO {
 		}
 
 		// 判断主键列值是否为空
-		boolean keyNotNull = true;
-		List<Object> primaryValue = new ArrayList<>();
+		List<Object> primaryValue = metaInfo.primaryKeys.stream().map(k -> {
+			return BeanUtil.getFieldValue(bean, k.getName());
+		}).filter(kvalue -> {
+			return kvalue != null;
+		}).collect(Collectors.toList());
 
-		for (Field key : metaInfo.primaryKeys) {
-			Object keyValue = BeanUtil.getFieldValue(bean, key.getName());
-
-			if (keyValue == null) {
-				keyNotNull = false;
-				break;
-			}
-
-			primaryValue.add(keyValue);
-		}
-
-		if (keyNotNull && find(t, primaryValue.toArray()) != null) {
+		if (metaInfo.primaryKeys.size() == primaryValue.size() && find(t, primaryValue.toArray()) != null) {
 			uptRresult = update(bean);
 		} else {
 
@@ -596,9 +564,7 @@ public class SuperDAO extends AbstractDAO {
 			}
 
 			try {
-
-				delStat = conn.prepareStatement("delete from "
-						+ getTableName(metaInfo.tableMetaInfo));
+				delStat = conn.prepareStatement("DELETE FROM " + getTableName(metaInfo.tableMetaInfo));
 
 				uptRresult = delStat.executeUpdate();
 
@@ -635,28 +601,19 @@ public class SuperDAO extends AbstractDAO {
 			String tableName = getTableName(metaInfo.tableMetaInfo);
 
 			// 拼接SQL
-			StringBuffer sql = new StringBuffer("delete from " + tableName);
-
-			StringBuffer delWhereSql = null;
+			StringBuffer sql = new StringBuffer("DELETE FROM " + tableName);
 			List<Object> colValues = new ArrayList<>();
 
-			for (Field key : metaInfo.primaryKeys) {
-				String colName = BeanUtil.getColumnName(key);
+			// 主键
+			sql.append(metaInfo.primaryKeys.stream().map(k -> {
 
-				if (delWhereSql == null) {
-					delWhereSql = new StringBuffer(" where " + colName + " = ? ");
-				} else {
-					delWhereSql.append(" and " + colName + " = ? ");
-				}
+				// 保存主键值
+				colValues.add(BeanUtil.getFieldValue(bean, k.getName()));
 
-				// 保存列值
-				colValues.add(BeanUtil.getFieldValue(bean, key.getName()));
-			}
-
-			sql.append(delWhereSql.toString());
+				return BeanUtil.getColumnName(k) + " = ?";
+			}).collect(Collectors.joining(" AND ", " WHERE", "")));
 
 			try {
-
 				delStat = conn.prepareStatement(sql.toString());
 
 				// 赋值
@@ -676,11 +633,10 @@ public class SuperDAO extends AbstractDAO {
 
 		return uptRresult;
 	}
-	
-	
+
 	@Override
 	public long getUniqueValue(String sql, Object... param) throws DAOException {
-		
+
 		PreparedStatement stat = null;
 		RSMemoryCache rs = null;
 
@@ -689,7 +645,6 @@ public class SuperDAO extends AbstractDAO {
 			requestConnection();
 
 			try {
-
 				stat = conn.prepareStatement(sql.toString());
 
 				if (param != null) {
