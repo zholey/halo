@@ -87,9 +87,9 @@ public class SuperDAO extends AbstractDAO {
 			sql.append("FROM " + tableName);
 
 			// 主键
-			metaInfo.primaryKeys.stream().map(k -> {
+			sql.append(metaInfo.primaryKeys.stream().map(k -> {
 				return BeanUtil.getColumnName(k) + " = ?";
-			}).collect(Collectors.joining(" AND ", "WHERE", ""));
+			}).collect(Collectors.joining(" AND ", "WHERE", "")));
 
 			try {
 
