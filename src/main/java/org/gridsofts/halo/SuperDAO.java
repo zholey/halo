@@ -81,7 +81,7 @@ public class SuperDAO extends AbstractDAO {
 			// 拼接所有列名
 			sql.append(metaInfo.fields.stream().map(field -> {
 				return BeanUtil.getColumnName(field);
-			}).collect(Collectors.joining(",", " ", " ")));
+			}).collect(Collectors.joining(", ", " ", " ")));
 
 			// 表名
 			sql.append("FROM " + tableName);
@@ -89,7 +89,7 @@ public class SuperDAO extends AbstractDAO {
 			// 主键
 			sql.append(metaInfo.primaryKeys.stream().map(k -> {
 				return BeanUtil.getColumnName(k) + " = ?";
-			}).collect(Collectors.joining(" AND ", "WHERE", "")));
+			}).collect(Collectors.joining(" AND ", " WHERE ", " ")));
 
 			try {
 
@@ -478,7 +478,7 @@ public class SuperDAO extends AbstractDAO {
 				colValues.add(BeanUtil.getFieldValue(bean, field.getName()));
 
 				return BeanUtil.getColumnName(field) + " = ?";
-			}).collect(Collectors.joining(",", " ", " ")));
+			}).collect(Collectors.joining(", ", " ", " ")));
 
 			// 主键
 			sql.append(metaInfo.primaryKeys.stream().map(k -> {
@@ -487,7 +487,7 @@ public class SuperDAO extends AbstractDAO {
 				colValues.add(BeanUtil.getFieldValue(bean, k.getName()));
 
 				return BeanUtil.getColumnName(k) + " = ?";
-			}).collect(Collectors.joining(" AND ", "WHERE", "")));
+			}).collect(Collectors.joining(" AND ", " WHERE ", " ")));
 
 			try {
 
@@ -611,7 +611,7 @@ public class SuperDAO extends AbstractDAO {
 				colValues.add(BeanUtil.getFieldValue(bean, k.getName()));
 
 				return BeanUtil.getColumnName(k) + " = ?";
-			}).collect(Collectors.joining(" AND ", " WHERE", "")));
+			}).collect(Collectors.joining(" AND ", " WHERE ", " ")));
 
 			try {
 				delStat = conn.prepareStatement(sql.toString());
