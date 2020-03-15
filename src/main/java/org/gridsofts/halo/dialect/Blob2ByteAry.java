@@ -5,17 +5,17 @@
  */
 package org.gridsofts.halo.dialect;
 
-import java.sql.Clob;
+import java.sql.Blob;
 import java.sql.SQLException;
 
 import org.gridsofts.halo.itf.ITypeConverter;
 
 /**
- * 本类实现将Clob类型转换为String
+ * 本类实现将Blob类型转换为Byte[]
  * 
  * @author Lei
  */
-public class Clob2String implements ITypeConverter {
+public class Blob2ByteAry implements ITypeConverter {
 
 	@Override
 	public boolean accept(Object value, Class<?> targetCls) {
@@ -24,24 +24,24 @@ public class Clob2String implements ITypeConverter {
 			return false;
 		}
 
-		return Clob.class.isAssignableFrom(value.getClass())
-				&& String.class.isAssignableFrom(targetCls);
+		return Blob.class.isAssignableFrom(value.getClass())
+				&& byte[].class.isAssignableFrom(targetCls);
 	}
 
 	@Override
-	public String convert(Object value) {
+	public byte[] convert(Object value) {
 
 		if (value == null) {
 			return null;
 		}
 		
-		Clob clob = Clob.class.cast(value);
+		Blob blob = Blob.class.cast(value);
 
 		try {
-			return clob.getSubString(1L, (int) clob.length());
+			return blob.getBytes(1L, (int) blob.length());
 		} catch (SQLException e) {
 		}
 		
-		return value.toString();
+		return null;
 	}
 }
