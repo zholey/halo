@@ -19,10 +19,11 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -157,7 +158,7 @@ public class BeanUtil {
 				field = beanClass.getDeclaredField(fieldName);
 			} catch (Throwable e) {
 			}
-			
+
 			if (field != null) {
 				return field;
 			} else if (beanClass.getSuperclass() != null) {
@@ -198,10 +199,8 @@ public class BeanUtil {
 	/**
 	 * 从给定的Bean获取属性值；
 	 * 
-	 * @param bean
-	 *            给定的Bean，可以是Map
-	 * @param fldName
-	 *            属性名称，支持级联表达式“.”
+	 * @param bean    给定的Bean，可以是Map
+	 * @param fldName 属性名称，支持级联表达式“.”
 	 * @return
 	 */
 	public static <T> Object getFieldValue(T bean, String fldName) {
@@ -315,8 +314,7 @@ public class BeanUtil {
 	/**
 	 * 获取字段对应的数据列名，除非有特别标注(Column)，否则直接使用字段名
 	 * 
-	 * @param fieldName
-	 *            字段名称
+	 * @param fieldName 字段名称
 	 * @param beanClass
 	 * @return
 	 */
@@ -339,10 +337,8 @@ public class BeanUtil {
 	/**
 	 * 根据结果集信息，构造结果Map。对于此结果集的遍历操作，应该在此方法的宿主内进行。
 	 * 
-	 * @param rs
-	 *            结果集
-	 * @param rsmd
-	 *            结果集元数据
+	 * @param rs   结果集
+	 * @param rsmd 结果集元数据
 	 * @return
 	 */
 	public static Map<String, Object> getEntityMap(ResultSet rs, ResultSetMetaData rsmd) throws SQLException {
@@ -369,7 +365,7 @@ public class BeanUtil {
 	 * @param toBean
 	 */
 	public static <T> T copyProperties(T fromBean, T toBean) {
-		return copyProperties(fromBean, toBean, null, null);
+		return copyProperties(fromBean, toBean, null, null, null);
 	}
 
 	/**
@@ -381,38 +377,47 @@ public class BeanUtil {
 	 * @param ignoreFields
 	 */
 	public static <T> T copyProperties(T fromBean, T toBean, String[] ignoreFields) {
-		return copyProperties(fromBean, toBean, ignoreFields, null);
+		return copyProperties(fromBean, toBean, ignoreFields, null, null);
 	}
 
 	/**
 	 * 拷贝属性
 	 * 
 	 * @param <T>
-	 * @param fromBean
-	 * @param toBean
+	 * @param fromObj
+	 * @param toObj
 	 * @param ignoreFields
 	 * @param limitFields
 	 */
-	public static <T> T copyProperties(T fromBean, T toBean, String[] ignoreFields, String[] limitFields) {
+	@SuppressWarnings("unchecked")
+	public static <T> T copyProperties(T fromObj, T toObj, String[] ignoreFields, String[] limitFields,
+			ITypeConverter[] typeConverters) {
 
-		if (fromBean == null || toBean == null) {
+		if (fromObj == null || toObj == null) {
 			throw new NullPointerException();
 		}
 
-		Field[] fields = fromBean.getClass().getDeclaredFields();
+		Field[] fields = toObj.getClass().getDeclaredFields();
 
 		if (fields == null || fields.length == 0) {
-			return toBean;
+			return toObj;
+		}
+
+		Map<String, Object> fromMap = null;
+		if (Map.class.isAssignableFrom(fromObj.getClass())) {
+			fromMap = (Map<String, Object>) fromObj;
 		}
 
 		// 为bean的各字段赋值
 		fieldLoop: for (int i = 0, fieldCount = fields.length; i < fieldCount; i++) {
-			String fieldName = fields[i].getName();
+			Field toFld = fields[i];
 
 			// 跳过静态、常量字段
 			if (isConstField(fields[i])) {
 				continue fieldLoop;
 			}
+
+			String fieldName = toFld.getName();
 
 			// 忽略的字段
 			if (ignoreFields != null) {
@@ -442,131 +447,64 @@ public class BeanUtil {
 				}
 			}
 
-			// getter
-			Method getterMethod = null;
-			try {
-				getterMethod = fromBean.getClass().getMethod(getGetterMethodName(fieldName));
-			} catch (Throwable e) {
-			}
+			Object fieldValue = null;
 
-			// setter
-			Method setterMethod = null;
-			try {
-				setterMethod = toBean.getClass().getMethod(getSetterMethodName(fieldName), fields[i].getType());
-			} catch (Throwable e) {
-			}
+			// 判断 fromObj 类型
+			if (fromMap != null) {
 
-			// 如果找不到指定字段的setter方法或getter方法，则忽略
-			if (getterMethod == null || setterMethod == null) {
-				continue;
-			}
+				// map key
+				try {
+					fieldValue = fromMap.get(getColumnName(toFld).toUpperCase());
+				} catch (Throwable e) {
+				}
+			} else {
 
-			try {
-				setterMethod.invoke(toBean, getterMethod.invoke(fromBean));
-			} catch (Throwable e) {
-			}
-		}
+				// getter
+				Method getterMethod = null;
+				try {
+					getterMethod = fromObj.getClass().getMethod(getGetterMethodName(fieldName));
 
-		return toBean;
-	}
-
-	/**
-	 * 拷贝属性
-	 * 
-	 * @param <T>
-	 * @param fromMap
-	 * @param toBean
-	 * @param ignoreFields
-	 * @param limitFields
-	 * @param typeConverters
-	 */
-	public static <T> T copyProperties(Map<String, Object> fromMap, T toBean, String[] ignoreFields,
-			String[] limitFields, ITypeConverter[] typeConverters) {
-
-		if (fromMap == null || toBean == null) {
-			throw new NullPointerException();
-		}
-
-		Set<String> keys = fromMap.keySet();
-
-		if (keys == null || keys.size() == 0) {
-			return toBean;
-		}
-
-		Field[] fields = toBean.getClass().getDeclaredFields();
-
-		if (fields == null || fields.length == 0) {
-			return toBean;
-		}
-
-		// 为bean的各字段赋值
-		fieldLoop: for (int i = 0, fieldCount = fields.length; i < fieldCount; i++) {
-			String fieldName = fields[i].getName();
-
-			// 跳过静态、常量字段
-			if (isConstField(fields[i])) {
-				continue fieldLoop;
-			}
-
-			// 忽略的字段
-			if (ignoreFields != null) {
-
-				for (String fld : ignoreFields) {
-
-					if (fieldName.equals(fld)) {
-						continue fieldLoop;
+					// 优先使用 getter 方法来获取属性值
+					if (getterMethod != null) {
+						fieldValue = getterMethod.invoke(fromObj);
+					} else {
+						Field fromFld = fromObj.getClass().getField(fieldName);
+						if (fromFld != null) {
+							fromFld.setAccessible(true);
+							fieldValue = fromFld.get(fromObj);
+						}
 					}
+				} catch (Throwable e) {
 				}
 			}
 
-			// 限制的字段
-			if (limitFields != null) {
-
-				boolean finded = false;
-				for (String fld : limitFields) {
-
-					if (fieldName.equals(fld)) {
-						finded = true;
-						break;
-					}
-				}
-
-				if (!finded) {
-					continue fieldLoop;
-				}
-			}
-
-			// map key
-			String keyName = null;
-			try {
-				keyName = getColumnName(fields[i]).toUpperCase();
-			} catch (Throwable e) {
-			}
-
-			// setter
-			Method setterMethod = null;
-			try {
-				setterMethod = toBean.getClass().getMethod(getSetterMethodName(fieldName), fields[i].getType());
-			} catch (Throwable e) {
-			}
-
-			// 如果找不到指定字段的setter方法或getter方法，则忽略
-			if (keyName == null || setterMethod == null) {
-				continue;
-			}
-
-			Object fldValue = fromMap.get(keyName);
+			// 如果指定了类型转换器，则尝试进行类型转换
 			if (typeConverters != null && typeConverters.length > 0) {
-				fldValue = convert(fldValue, fields[i].getType(), typeConverters);
+				final Object fldValue = fieldValue;
+				Optional<ITypeConverter> typeConverter = Arrays.stream(typeConverters)
+						.filter(converter -> converter.accept(fldValue, toFld.getType())).findFirst();
+				if (typeConverter.isPresent()) {
+					fieldValue = typeConverter.get().convert(fldValue);
+				}
 			}
 
+			// setter
+			Method setterMethod = null;
 			try {
-				setterMethod.invoke(toBean, fldValue);
+				setterMethod = toObj.getClass().getMethod(getSetterMethodName(fieldName), toFld.getType());
+
+				// 优先使用 setter 方法来为属性赋值
+				if (setterMethod != null) {
+					setterMethod.invoke(toObj, fieldValue);
+				} else {
+					toFld.setAccessible(true);
+					toFld.set(toObj, fieldValue);
+				}
 			} catch (Throwable e) {
 			}
 		}
 
-		return toBean;
+		return toObj;
 	}
 
 	/**
@@ -577,15 +515,13 @@ public class BeanUtil {
 	 * @param typeConverters
 	 * @return
 	 */
-	public static Object convert(Object value, Class<?> targetCls, ITypeConverter[] typeConverters) {
+	public static Object convert(final Object value, Class<?> targetCls, ITypeConverter[] typeConverters) {
 
 		if (typeConverters != null && typeConverters.length > 0) {
-
-			for (ITypeConverter typeConverter : typeConverters) {
-
-				if (typeConverter.accept(value, targetCls)) {
-					return typeConverter.convert(value);
-				}
+			Optional<ITypeConverter> typeConverter = Arrays.stream(typeConverters)
+					.filter(converter -> converter.accept(value, targetCls)).findFirst();
+			if (typeConverter.isPresent()) {
+				return typeConverter.get().convert(value);
 			}
 		}
 
