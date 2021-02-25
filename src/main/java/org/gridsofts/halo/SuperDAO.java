@@ -12,6 +12,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -22,6 +23,8 @@ import org.gridsofts.halo.exception.DAOException;
 import org.gridsofts.halo.itf.IConnectionFactory;
 import org.gridsofts.halo.itf.IWritebackKeys;
 import org.gridsofts.halo.util.BeanUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 数据访问对象，将数据操作转化为对对象的操作，可以方便编程人员，减少SQL工作量。<br/>
@@ -32,6 +35,7 @@ import org.gridsofts.halo.util.BeanUtil;
  */
 public class SuperDAO extends AbstractDAO {
 	private static final long serialVersionUID = 1L;
+	private static final Logger logger = LoggerFactory.getLogger(SuperDAO.class);
 
 	public SuperDAO() {
 	}
@@ -92,8 +96,16 @@ public class SuperDAO extends AbstractDAO {
 			}).collect(Collectors.joining(" AND ", " WHERE ", " ")));
 
 			try {
+				if (logger.isDebugEnabled()) {
+					logger.debug("==> Halo Preparing: {}", sql.toString());
+				}
 
 				stat = conn.prepareStatement(sql.toString());
+
+				if (logger.isDebugEnabled()) {
+					logger.debug("==> Halo Parameters: {}",
+							Arrays.stream(key).map(Object::toString).collect(Collectors.joining(",")));
+				}
 
 				// SQL赋值
 				for (int i = 0; i < key.length; i++) {
@@ -154,10 +166,18 @@ public class SuperDAO extends AbstractDAO {
 			}
 
 			try {
+				if (logger.isDebugEnabled()) {
+					logger.debug("==> Halo Preparing: {}", sql.toString());
+				}
 
 				stat = conn.prepareStatement(sql.toString());
 
 				if (param != null) {
+					if (logger.isDebugEnabled()) {
+						logger.debug("==> Halo Parameters: {}",
+								Arrays.stream(param).map(Object::toString).collect(Collectors.joining(",")));
+					}
+
 					for (int i = 0; i < param.length; i++) {
 						stat.setObject(i + 1, param[i]);
 					}
@@ -232,10 +252,18 @@ public class SuperDAO extends AbstractDAO {
 			}
 
 			try {
+				if (logger.isDebugEnabled()) {
+					logger.debug("==> Halo Preparing: {}", sql.toString());
+				}
 
 				stat = conn.prepareStatement(dialectSql);
 
 				if (param != null) {
+					if (logger.isDebugEnabled()) {
+						logger.debug("==> Halo Parameters: {}",
+								Arrays.stream(param).map(Object::toString).collect(Collectors.joining(",")));
+					}
+
 					for (int i = 0; i < param.length; i++) {
 						stat.setObject(i + 1, param[i]);
 					}
@@ -298,10 +326,19 @@ public class SuperDAO extends AbstractDAO {
 					String batchSQL = dialect.getInsertSQL(values, keyColumnNames, metaInfo, tableName, beans);
 
 					try {
+						if (logger.isDebugEnabled()) {
+							logger.debug("==> Halo Preparing: {}", batchSQL.toString());
+						}
+
 						if (keyColumnNames.size() > 0) {
 							statement = conn.prepareStatement(batchSQL, keyColumnNames.toArray(new String[0]));
 						} else {
 							statement = conn.prepareStatement(batchSQL);
+						}
+
+						if (logger.isDebugEnabled()) {
+							logger.debug("==> Halo Parameters: {}",
+									values.stream().map(Object::toString).collect(Collectors.joining(",")));
 						}
 
 						for (int i = 0, vLength = values.size(); i < vLength; i++) {
@@ -322,10 +359,19 @@ public class SuperDAO extends AbstractDAO {
 						String batchSQL = dialect.getInsertSQL(values, keyColumnNames, metaInfo, tableName, bean);
 
 						try {
+							if (logger.isDebugEnabled()) {
+								logger.debug("==> Halo Preparing: {}", batchSQL.toString());
+							}
+
 							if (keyColumnNames.size() > 0) {
 								statement = conn.prepareStatement(batchSQL, keyColumnNames.toArray(new String[0]));
 							} else {
 								statement = conn.prepareStatement(batchSQL);
+							}
+
+							if (logger.isDebugEnabled()) {
+								logger.debug("==> Halo Parameters: {}",
+										values.stream().map(Object::toString).collect(Collectors.joining(",")));
 							}
 
 							for (int i = 0, vLength = values.size(); i < vLength; i++) {
@@ -390,10 +436,19 @@ public class SuperDAO extends AbstractDAO {
 				String insertSQL = dialect.getInsertSQL(values, keyColumnNames, metaInfo, tableName, bean);
 
 				try {
+					if (logger.isDebugEnabled()) {
+						logger.debug("==> Halo Preparing: {}", insertSQL.toString());
+					}
+
 					if (keyColumnNames.size() > 0) {
 						statement = conn.prepareStatement(insertSQL, keyColumnNames.toArray(new String[0]));
 					} else {
 						statement = conn.prepareStatement(insertSQL);
+					}
+
+					if (logger.isDebugEnabled()) {
+						logger.debug("==> Halo Parameters: {}",
+								values.stream().map(Object::toString).collect(Collectors.joining(",")));
 					}
 
 					for (int i = 0, vLength = values.size(); i < vLength; i++) {
@@ -490,9 +545,17 @@ public class SuperDAO extends AbstractDAO {
 			}).collect(Collectors.joining(" AND ", " WHERE ", " ")));
 
 			try {
+				if (logger.isDebugEnabled()) {
+					logger.debug("==> Halo Preparing: {}", sql.toString());
+				}
 
 				// 修改记录
 				saveStat = conn.prepareStatement(sql.toString());
+
+				if (logger.isDebugEnabled()) {
+					logger.debug("==> Halo Parameters: {}",
+							colValues.stream().map(Object::toString).collect(Collectors.joining(",")));
+				}
 
 				// 赋值
 				for (int i = 0, count = colValues.size(); i < count; i++) {
@@ -564,7 +627,13 @@ public class SuperDAO extends AbstractDAO {
 			}
 
 			try {
-				delStat = conn.prepareStatement("DELETE FROM " + getTableName(metaInfo.tableMetaInfo));
+				String sql = "DELETE FROM " + getTableName(metaInfo.tableMetaInfo);
+
+				if (logger.isDebugEnabled()) {
+					logger.debug("==> Halo Preparing: {}", sql.toString());
+				}
+
+				delStat = conn.prepareStatement(sql);
 
 				uptRresult = delStat.executeUpdate();
 
@@ -614,7 +683,16 @@ public class SuperDAO extends AbstractDAO {
 			}).collect(Collectors.joining(" AND ", " WHERE ", " ")));
 
 			try {
+				if (logger.isDebugEnabled()) {
+					logger.debug("==> Halo Preparing: {}", sql.toString());
+				}
+
 				delStat = conn.prepareStatement(sql.toString());
+
+				if (logger.isDebugEnabled()) {
+					logger.debug("==> Halo Parameters: {}",
+							colValues.stream().map(Object::toString).collect(Collectors.joining(",")));
+				}
 
 				// 赋值
 				for (int i = 0, count = colValues.size(); i < count; i++) {
@@ -645,9 +723,19 @@ public class SuperDAO extends AbstractDAO {
 			requestConnection();
 
 			try {
+				if (logger.isDebugEnabled()) {
+					logger.debug("==> Halo Preparing: {}", sql.toString());
+				}
+
 				stat = conn.prepareStatement(sql.toString());
 
 				if (param != null) {
+
+					if (logger.isDebugEnabled()) {
+						logger.debug("==> Halo Parameters: {}",
+								Arrays.stream(param).map(Object::toString).collect(Collectors.joining(",")));
+					}
+
 					for (int i = 0; i < param.length; i++) {
 						stat.setObject(i + 1, param[i]);
 					}
@@ -713,9 +801,19 @@ public class SuperDAO extends AbstractDAO {
 				dialectSql = dialect.getPageSQL(dialectSql, start, limit);
 			}
 
+			if (logger.isDebugEnabled()) {
+				logger.debug("==> Halo Preparing: {}", dialectSql.toString());
+			}
+
 			stat = conn.prepareStatement(dialectSql);
 
 			if (param != null) {
+
+				if (logger.isDebugEnabled()) {
+					logger.debug("==> Halo Parameters: {}",
+							Arrays.stream(param).map(Object::toString).collect(Collectors.joining(",")));
+				}
+
 				for (int i = 0; i < param.length; i++) {
 					stat.setObject(i + 1, param[i]);
 				}
@@ -752,6 +850,12 @@ public class SuperDAO extends AbstractDAO {
 			stat = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
 
 			if (param != null) {
+
+				if (logger.isDebugEnabled()) {
+					logger.debug("==> Halo Parameters: {}",
+							Arrays.stream(param).map(Object::toString).collect(Collectors.joining(",")));
+				}
+
 				for (int i = 0; i < param.length; i++) {
 					stat.setObject(i + 1, param[i]);
 				}
@@ -809,9 +913,19 @@ public class SuperDAO extends AbstractDAO {
 				dialectSql = dialect.getPageSQL(dialectSql, start, limit);
 			}
 
+			if (logger.isDebugEnabled()) {
+				logger.debug("==> Halo Preparing: {}", dialectSql.toString());
+			}
+
 			stat = conn.prepareStatement(dialectSql);
 
 			if (param != null) {
+
+				if (logger.isDebugEnabled()) {
+					logger.debug("==> Halo Parameters: {}",
+							Arrays.stream(param).map(Object::toString).collect(Collectors.joining(",")));
+				}
+
 				for (int i = 0; i < param.length; i++) {
 					stat.setObject(i + 1, param[i]);
 				}
