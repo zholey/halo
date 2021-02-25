@@ -4,7 +4,7 @@
 
 	<groupId>org.gridsofts</groupId>
 	<artifactId>halo</artifactId>
-	<version>1.0.8</version>
+	<version>1.0.9</version>
 	<packaging>jar</packaging>
 
 	<name>halo</name>

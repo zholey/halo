@@ -52,13 +52,19 @@ public class Condition implements Serializable {
 		}
 
 		public static enum Association {
-			Exact, Fuzzy
+			Equals, // = ?
+			NotEquals, // <> ?
+			Like, // like %?%
+			NotLike, // not like %?%
+			LikeTo, // like ?
+			In, // in (?)
+			NotIn // not in (?)
 		}
 
 		// 参数类型
 		private Type type = Type.String;
 		// 关联类型
-		private Association association = Association.Exact;
+		private Association association = Association.Equals;
 
 		// 参数名；字段名
 		private String name;
@@ -73,21 +79,21 @@ public class Condition implements Serializable {
 		}
 
 		public Param(Type type, String name, Object value) {
-			this(type, name, value, Association.Exact);
+			this(type, name, value, Association.Equals);
 		}
 
 		public Param(String name, Object value) {
-			this(Type.String, name, value, Association.Exact);
+			this(Type.String, name, value, Association.Equals);
 
-			if (value instanceof Integer || value instanceof Long || value instanceof Float
-					|| value instanceof Double || value instanceof BigDecimal) {
+			if (value instanceof Integer || value instanceof Long || value instanceof Float || value instanceof Double
+					|| value instanceof BigDecimal) {
 				this.type = Type.Number;
 			}
 		}
 
 		public Param(String name, Object value, Association association) {
 			this(name, value);
-			
+
 			this.association = association;
 		}
 
