@@ -103,8 +103,9 @@ public class SuperDAO extends AbstractDAO {
 				stat = conn.prepareStatement(sql.toString());
 
 				if (logger.isDebugEnabled()) {
-					logger.debug("==> Halo Parameters: {}",
-							Arrays.stream(key).map(Object::toString).collect(Collectors.joining(",")));
+					logger.debug("==> Halo Parameters: {}", Arrays.stream(key).map(v -> {
+						return v == null ? "" : v.toString();
+					}).collect(Collectors.joining(",")));
 				}
 
 				// SQL赋值
@@ -174,8 +175,9 @@ public class SuperDAO extends AbstractDAO {
 
 				if (param != null) {
 					if (logger.isDebugEnabled()) {
-						logger.debug("==> Halo Parameters: {}",
-								Arrays.stream(param).map(Object::toString).collect(Collectors.joining(",")));
+						logger.debug("==> Halo Parameters: {}", Arrays.stream(param).map(v -> {
+							return v == null ? "" : v.toString();
+						}).collect(Collectors.joining(",")));
 					}
 
 					for (int i = 0; i < param.length; i++) {
@@ -253,15 +255,16 @@ public class SuperDAO extends AbstractDAO {
 
 			try {
 				if (logger.isDebugEnabled()) {
-					logger.debug("==> Halo Preparing: {}", sql.toString());
+					logger.debug("==> Halo Preparing: {}", dialectSql.toString());
 				}
 
 				stat = conn.prepareStatement(dialectSql);
 
 				if (param != null) {
 					if (logger.isDebugEnabled()) {
-						logger.debug("==> Halo Parameters: {}",
-								Arrays.stream(param).map(Object::toString).collect(Collectors.joining(",")));
+						logger.debug("==> Halo Parameters: {}", Arrays.stream(param).map(v -> {
+							return v == null ? "" : v.toString();
+						}).collect(Collectors.joining(",")));
 					}
 
 					for (int i = 0; i < param.length; i++) {
@@ -337,8 +340,9 @@ public class SuperDAO extends AbstractDAO {
 						}
 
 						if (logger.isDebugEnabled()) {
-							logger.debug("==> Halo Parameters: {}",
-									values.stream().map(Object::toString).collect(Collectors.joining(",")));
+							logger.debug("==> Halo Parameters: {}", values.stream().map(v -> {
+								return v == null ? "" : v.toString();
+							}).collect(Collectors.joining(",")));
 						}
 
 						for (int i = 0, vLength = values.size(); i < vLength; i++) {
@@ -370,8 +374,9 @@ public class SuperDAO extends AbstractDAO {
 							}
 
 							if (logger.isDebugEnabled()) {
-								logger.debug("==> Halo Parameters: {}",
-										values.stream().map(Object::toString).collect(Collectors.joining(",")));
+								logger.debug("==> Halo Parameters: {}", values.stream().map(v -> {
+									return v == null ? "" : v.toString();
+								}).collect(Collectors.joining(",")));
 							}
 
 							for (int i = 0, vLength = values.size(); i < vLength; i++) {
@@ -447,8 +452,9 @@ public class SuperDAO extends AbstractDAO {
 					}
 
 					if (logger.isDebugEnabled()) {
-						logger.debug("==> Halo Parameters: {}",
-								values.stream().map(Object::toString).collect(Collectors.joining(",")));
+						logger.debug("==> Halo Parameters: {}", values.stream().map(v -> {
+							return v == null ? "" : v.toString();
+						}).collect(Collectors.joining(",")));
 					}
 
 					for (int i = 0, vLength = values.size(); i < vLength; i++) {
@@ -553,8 +559,9 @@ public class SuperDAO extends AbstractDAO {
 				saveStat = conn.prepareStatement(sql.toString());
 
 				if (logger.isDebugEnabled()) {
-					logger.debug("==> Halo Parameters: {}",
-							colValues.stream().map(Object::toString).collect(Collectors.joining(",")));
+					logger.debug("==> Halo Parameters: {}", colValues.stream().map(v -> {
+						return v == null ? "" : v.toString();
+					}).collect(Collectors.joining(",")));
 				}
 
 				// 赋值
@@ -690,8 +697,9 @@ public class SuperDAO extends AbstractDAO {
 				delStat = conn.prepareStatement(sql.toString());
 
 				if (logger.isDebugEnabled()) {
-					logger.debug("==> Halo Parameters: {}",
-							colValues.stream().map(Object::toString).collect(Collectors.joining(",")));
+					logger.debug("==> Halo Parameters: {}", colValues.stream().map(v -> {
+						return v == null ? "" : v.toString();
+					}).collect(Collectors.joining(",")));
 				}
 
 				// 赋值
@@ -732,8 +740,9 @@ public class SuperDAO extends AbstractDAO {
 				if (param != null) {
 
 					if (logger.isDebugEnabled()) {
-						logger.debug("==> Halo Parameters: {}",
-								Arrays.stream(param).map(Object::toString).collect(Collectors.joining(",")));
+						logger.debug("==> Halo Parameters: {}", Arrays.stream(param).map(v -> {
+							return v == null ? "" : v.toString();
+						}).collect(Collectors.joining(",")));
 					}
 
 					for (int i = 0; i < param.length; i++) {
@@ -810,8 +819,9 @@ public class SuperDAO extends AbstractDAO {
 			if (param != null) {
 
 				if (logger.isDebugEnabled()) {
-					logger.debug("==> Halo Parameters: {}",
-							Arrays.stream(param).map(Object::toString).collect(Collectors.joining(",")));
+					logger.debug("==> Halo Parameters: {}", Arrays.stream(param).map(v -> {
+						return v == null ? "" : v.toString();
+					}).collect(Collectors.joining(",")));
 				}
 
 				for (int i = 0; i < param.length; i++) {
@@ -852,8 +862,9 @@ public class SuperDAO extends AbstractDAO {
 			if (param != null) {
 
 				if (logger.isDebugEnabled()) {
-					logger.debug("==> Halo Parameters: {}",
-							Arrays.stream(param).map(Object::toString).collect(Collectors.joining(",")));
+					logger.debug("==> Halo Parameters: {}", Arrays.stream(param).map(v -> {
+						return v == null ? "" : v.toString();
+					}).collect(Collectors.joining(",")));
 				}
 
 				for (int i = 0; i < param.length; i++) {
@@ -922,8 +933,9 @@ public class SuperDAO extends AbstractDAO {
 			if (param != null) {
 
 				if (logger.isDebugEnabled()) {
-					logger.debug("==> Halo Parameters: {}",
-							Arrays.stream(param).map(Object::toString).collect(Collectors.joining(",")));
+					logger.debug("==> Halo Parameters: {}", Arrays.stream(param).map(v -> {
+						return v == null ? "" : v.toString();
+					}).collect(Collectors.joining(",")));
 				}
 
 				for (int i = 0; i < param.length; i++) {
