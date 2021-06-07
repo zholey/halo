@@ -856,6 +856,9 @@ public class SuperDAO extends AbstractDAO {
 		requestConnection();
 
 		try {
+			if (logger.isDebugEnabled()) {
+				logger.debug("==> Halo Preparing: {}", sql.toString());
+			}
 
 			stat = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
 
