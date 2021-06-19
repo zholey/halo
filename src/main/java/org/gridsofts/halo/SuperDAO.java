@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.gridsofts.halo.annotation.DontModify;
 import org.gridsofts.halo.annotation.Table;
 import org.gridsofts.halo.bean.RSMemoryCache;
 import org.gridsofts.halo.exception.DAOException;
@@ -532,7 +533,8 @@ public class SuperDAO extends AbstractDAO {
 			final List<Field> primaryKeys = metaInfo.primaryKeys;
 			sql.append(metaInfo.fields.stream().filter(field -> {
 				// 跳过主键列的赋值，不允许修改主键值
-				return !primaryKeys.contains(field);
+				// 跳过标记为“禁止修改”的列
+				return !primaryKeys.contains(field) && field.getAnnotation(DontModify.class) == null;
 			}).map(field -> {
 
 				// 保存列值

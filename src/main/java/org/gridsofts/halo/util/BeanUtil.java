@@ -381,6 +381,60 @@ public class BeanUtil {
 	}
 
 	/**
+	 * 拷贝部分属性
+	 * 
+	 * @param <T>
+	 * @param fromBean
+	 * @param toBean
+	 * @param ignoreAnnotations
+	 */
+	public static <T> T copyProperties(T fromBean, T toBean, Annotation[] ignoreAnnotations) {
+		
+		if (fromBean == null || toBean == null) {
+			throw new NullPointerException();
+		}
+		
+		if (ignoreAnnotations == null) {
+			return copyProperties(fromBean, toBean);
+		}
+		
+		// 需要忽略的注解列表
+		final List<Annotation> ignoreAnnotationList = Arrays.asList(ignoreAnnotations);
+
+		// 找出所有需要忽略的属性名称
+		List<String> ignoreFieldNames = new ArrayList<>();
+		Field[] fields = toBean.getClass().getDeclaredFields();
+
+		if (fields == null || fields.length == 0) {
+			return toBean;
+		}
+
+		// 为bean的各字段赋值
+		fieldLoop: for (int i = 0, fieldCount = fields.length; i < fieldCount; i++) {
+			Field toFld = fields[i];
+
+			// 跳过静态、常量字段
+			if (isConstField(toFld)) {
+				continue fieldLoop;
+			}
+
+			String fieldName = toFld.getName();
+
+			// 忽略的字段
+			Annotation[] fldAnnotations = toFld.getAnnotations();
+			if (fldAnnotations != null && fldAnnotations.length > 0) {
+				Arrays.stream(fldAnnotations).filter(annotation -> {
+					return ignoreAnnotationList.contains(annotation);
+				}).findAny().ifPresent(annotaion -> {
+					ignoreFieldNames.add(fieldName);
+				});
+			}
+		}
+		
+		return copyProperties(fromBean, toBean, ignoreFieldNames.toArray(new String[0]));
+	}
+
+	/**
 	 * 拷贝属性
 	 * 
 	 * @param <T>
